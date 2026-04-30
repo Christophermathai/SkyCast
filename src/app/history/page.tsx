@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { MapPin, Download, Trash2, Edit2, Check, X } from "lucide-react";
+import { SplitText } from "@/components/ui/SplitText";
+import { AnimatedList, AnimatedListItem } from "@/components/ui/AnimatedList";
 
 type Record = {
   id: string;
@@ -70,11 +72,15 @@ export default function History() {
   if (loading) return <div className="text-center py-20 text-slate-400">Loading history...</div>;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter mb-2">Search History</h1>
-          <p className="text-slate-400 font-serif text-xl" style={{ fontFamily: 'var(--font-instrument-serif), serif' }}>Manage and export your previous weather lookups.</p>
+          <h1 className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter mb-2">
+            <SplitText text="Search History" delay={30} />
+          </h1>
+          <p className="text-slate-400 font-serif text-xl" style={{ fontFamily: 'var(--font-instrument-serif), serif' }}>
+            <SplitText text="Manage and export your previous weather lookups." delay={15} delayOffset={300} />
+          </p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => handleExport('json')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-blue-500/20">
@@ -89,7 +95,9 @@ export default function History() {
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div 
+        className="bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl"
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-800/50 text-slate-400">
@@ -100,14 +108,14 @@ export default function History() {
                 <th className="px-6 py-4 font-display text-2xl tracking-tight text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <AnimatedList as="tbody" className="divide-y divide-slate-800/50" delay={100} initialDelay={600}>
               {records.length === 0 && (
-                <tr>
+                <AnimatedListItem as="tr">
                   <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No search history found.</td>
-                </tr>
+                </AnimatedListItem>
               )}
               {records.map(record => (
-                <tr key={record.id} className="hover:bg-slate-800/20 transition-colors">
+                <AnimatedListItem as="tr" key={record.id} className="hover:bg-slate-800/20 transition-colors">
                   <td className="px-6 py-4">
                     {editingId === record.id ? (
                       <div className="flex items-center gap-2">
@@ -144,9 +152,9 @@ export default function History() {
                       </button>
                     </div>
                   </td>
-                </tr>
+                </AnimatedListItem>
               ))}
-            </tbody>
+            </AnimatedList>
           </table>
         </div>
       </div>
