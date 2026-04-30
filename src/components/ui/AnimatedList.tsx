@@ -1,7 +1,33 @@
 "use client";
 
-import { ReactNode, ElementType, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  ReactNode,
+  ElementType,
+  useEffect,
+  useRef,
+  useState,
+  Children,
+  cloneElement,
+  isValidElement,
+  createElement,
+} from "react";
+
+/* ------------------------------------------------------------------ */
+/*  AnimatedList                                                       */
+/*  Lightweight staggered-reveal list powered by IntersectionObserver  */
+/*  + CSS transitions. No Framer Motion dependency.                   */
+/* ------------------------------------------------------------------ */
+
+type AnimatedListProps = {
+  children: ReactNode;
+  className?: string;
+  /** ms between each child's entrance */
+  delay?: number;
+  /** ms before the first child starts */
+  initialDelay?: number;
+  /** wrapper element – "div", "ul", "tbody", etc. */
+  as?: ElementType;
+};
 
 export function AnimatedList({
   children,
@@ -9,75 +35,83 @@ export function AnimatedList({
   delay = 100,
   initialDelay = 0,
   as: Component = "div",
-}: {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  initialDelay?: number;
-  as?: ElementType;
-}) {
-  const MotionComponent = useMemo(() => {
-    if (typeof Component === 'string') {
-      return (motion as any)[Component] || (motion as any).create(Component);
-    }
-    return (motion as any).create(Component);
-  }, [Component]);
+}: AnimatedListProps) {
+  const containerRef = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
 
-  return (
-    <MotionComponent
-      initial="hidden"
-      animate="show"
-      variants={{
-        hidden: { opacity: 0 },
-        show: {
-          opacity: 1,
-          transition: {
-            staggerChildren: delay / 1000,
-            delayChildren: initialDelay / 1000,
-          },
-        },
-      }}
-      className={className}
-    >
-      <AnimatePresence mode="popLayout">
-        {children}
-      </AnimatePresence>
-    </MotionComponent>
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Inject stagger index + visible flag into each AnimatedListItem child
+  const items = Children.toArray(children);
+
+  return createElement(
+    Component,
+    { ref: containerRef, className },
+    items.map((child, i) => {
+      if (isValidElement(child)) {
+        return cloneElement(child as React.ReactElement<any>, {
+          _staggerIndex: i,
+          _staggerDelay: delay,
+          _initialDelay: initialDelay,
+          _visible: visible,
+        });
+      }
+      return child;
+    })
   );
 }
 
-export function AnimatedListItem({ children, as: Component = "div", className }: { children: ReactNode, as?: ElementType, className?: string }) {
-  const MotionComponent = useMemo(() => {
-    if (typeof Component === 'string') {
-      return (motion as any)[Component] || (motion as any).create(Component);
-    }
-    return (motion as any).create(Component);
-  }, [Component]);
+/* ------------------------------------------------------------------ */
+/*  AnimatedListItem                                                   */
+/* ------------------------------------------------------------------ */
 
-  const isTableElement = Component === "tr" || Component === "tbody";
+type AnimatedListItemProps = {
+  children: ReactNode;
+  as?: ElementType;
+  className?: string;
+  // Internal props injected by AnimatedList
+  _staggerIndex?: number;
+  _staggerDelay?: number;
+  _initialDelay?: number;
+  _visible?: boolean;
+  [key: string]: any; // pass-through (key, etc.)
+};
 
-  return (
-    <MotionComponent
-      variants={{
-        hidden: { opacity: 0, y: isTableElement ? 0 : 20 },
-        show: { 
-          opacity: 1, 
-          y: 0,
-          transition: { 
-            duration: 0.6, 
-            ease: [0.215, 0.61, 0.355, 1] 
-          } 
-        },
-        exit: { 
-          opacity: 0, 
-          x: -20, 
-          transition: { duration: 0.3 } 
-        }
-      }}
-      className={className}
-      layout={isTableElement ? false : "position"}
-    >
-      {children}
-    </MotionComponent>
+export function AnimatedListItem({
+  children,
+  as: Component = "div",
+  className = "",
+  _staggerIndex = 0,
+  _staggerDelay = 100,
+  _initialDelay = 0,
+  _visible = false,
+  ...rest
+}: AnimatedListItemProps) {
+  const itemDelay = _initialDelay + _staggerIndex * _staggerDelay;
+
+  return createElement(
+    Component,
+    {
+      className: `animated-list-item ${_visible ? "animated-list-item--visible" : ""} ${className}`,
+      style: { transitionDelay: `${itemDelay}ms` } as React.CSSProperties,
+      ...rest,
+    },
+    children
   );
 }

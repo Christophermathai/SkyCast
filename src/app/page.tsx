@@ -8,6 +8,7 @@ type WeatherData = any;
 
 import { SplitText } from "@/components/ui/SplitText";
 import { CountUp } from "@/components/ui/CountUp";
+import { useTemperatureUnit } from "@/context/TemperatureUnitContext";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -15,6 +16,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [locationName, setLocationName] = useState("");
+  const { convert, label: unitLabel, unit } = useTemperatureUnit();
 
   const fetchWeather = async (lat: number, lon: number, name: string) => {
     setLoading(true);
@@ -163,7 +165,7 @@ export default function Home() {
         </form>
 
         {error && (
-          <div className="w-full max-w-xl bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl flex items-center gap-3 mt-4 animate-in fade-in slide-in-from-top-2">
+          <div className="w-full max-w-xl bg-red-500/30 border border-red-500/50 text-white-800 p-4 rounded-xl flex items-center gap-3 mt-4 animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-6 h-6 shrink-0" />
             <p className="text-sm">{error}</p>
           </div>
@@ -185,8 +187,8 @@ export default function Home() {
             style={{ animationDelay: '400ms', animationFillMode: 'both' }}
           >
             {/* Current Weather Card */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-3xl p-6 shadow-2xl relative overflow-hidden group hover:shadow-blue-500/10 transition-shadow duration-500">
-              <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/30 transition-all duration-700" />
+            <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden group hover:shadow-blue-500/10 transition-all duration-500 backdrop-blur-xl">
+              <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-emerald-500/20 rounded-full blur-3xl group-hover:from-blue-500/40 group-hover:to-emerald-500/40 transition-all duration-1000 animate-breath" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[200%] group-hover:animate-shimmer pointer-events-none" />
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-6">
@@ -198,10 +200,10 @@ export default function Home() {
                 </div>
                 <div className="text-center md:text-right relative z-10">
                   <p className="text-7xl font-display font-black tracking-tighter drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
-                    <CountUp to={Math.round(weather.current.temperature_2m)} delay={0.4} duration={1.5} />°
+                    <CountUp key={unit} to={convert(weather.current.temperature_2m)} delay={0.4} duration={1.5} />{unitLabel}
                   </p>
                   <div className="flex flex-wrap justify-center md:justify-end gap-x-4 gap-y-1 text-slate-400 mt-2 text-xs font-medium uppercase tracking-wider">
-                    <span>Feels like: <span className="font-display text-lg tracking-normal">{Math.round(weather.current.apparent_temperature)}°</span></span>
+                    <span>Feels like: <span className="font-display text-lg tracking-normal">{convert(weather.current.apparent_temperature)}{unitLabel}</span></span>
                     <span>Humidity: <span className="font-display text-lg tracking-normal">{weather.current.relative_humidity_2m}%</span></span>
                     <span>Wind: <span className="font-display text-lg tracking-normal">{weather.current.wind_speed_10m}</span> km/h</span>
                   </div>
@@ -211,41 +213,41 @@ export default function Home() {
 
             {/* Weather Details Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-sm hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10">
-                <Activity className="w-6 h-6 text-green-400 mb-1" />
-                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1">AQI (US)</span>
+              <div className="bg-slate-900/40 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-md hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-green-500/10 group/card">
+                <Activity className="w-6 h-6 text-green-400 mb-1 group-hover/card:scale-110 transition-transform" />
+                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1 uppercase opacity-60">AQI (US)</span>
                 <span className="text-3xl font-display tracking-tight font-bold">{weather.current.us_aqi ?? 'N/A'}</span>
               </div>
-              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-sm hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-yellow-500/10">
-                <Sun className="w-6 h-6 text-yellow-500 mb-1" />
-                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1">UV INDEX</span>
+              <div className="bg-slate-900/40 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-md hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-yellow-500/10 group/card">
+                <Sun className="w-6 h-6 text-yellow-500 mb-1 group-hover/card:scale-110 transition-transform" />
+                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1 uppercase opacity-60">UV INDEX</span>
                 <span className="text-3xl font-display tracking-tight font-bold">{weather.daily?.uv_index_max?.[0] ?? 'N/A'}</span>
               </div>
-              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-sm hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
-                <Gauge className="w-6 h-6 text-purple-400 mb-1" />
-                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1">PRESSURE</span>
+              <div className="bg-slate-900/40 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-md hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-purple-500/10 group/card">
+                <Gauge className="w-6 h-6 text-purple-400 mb-1 group-hover/card:scale-110 transition-transform" />
+                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1 uppercase opacity-60">PRESSURE</span>
                 <span className="text-3xl font-display tracking-tight font-bold">{weather.current.surface_pressure} <span className="text-base text-slate-400">hPa</span></span>
               </div>
-              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-sm hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-blue-500/10">
-                <Eye className="w-6 h-6 text-slate-300 mb-1" />
-                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1">VISIBILITY</span>
+              <div className="bg-slate-900/40 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-md hover:-translate-y-1 hover:bg-slate-800/60 transition-all duration-300 shadow-lg hover:shadow-blue-500/10 group/card">
+                <Eye className="w-6 h-6 text-slate-300 mb-1 group-hover/card:scale-110 transition-transform" />
+                <span className="text-slate-400 text-sm tracking-wider text-xs font-semibold mb-1 uppercase opacity-60">VISIBILITY</span>
                 <span className="text-3xl font-display tracking-tight font-bold">{(weather.current.visibility / 1000).toFixed(1)} <span className="text-base text-slate-400">km</span></span>
               </div>
             </div>
 
             {/* 5-Day Forecast */}
-            <h3 className="text-3xl font-display font-bold tracking-tight mb-2">5-Day Forecast</h3>
+            <h3 className="text-3xl font-display font-bold tracking-tight mb-2 opacity-80">5-Day Forecast</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {weather.daily.time.slice(1, 6).map((time: string, index: number) => (
-                <div key={time} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center hover:bg-slate-800/60 transition-colors backdrop-blur-sm">
-                  <span className="text-slate-300 font-display text-2xl tracking-tight mt-1">{format(new Date(time), 'EEE')}</span>
-                  <span className="text-sm font-medium text-slate-500 mb-2">{format(new Date(time), 'MMM d')}</span>
-                  <div className="scale-75 -mt-2 -mb-2">
+                <div key={time} className="bg-slate-900/40 border border-white/10 rounded-2xl p-4 flex flex-col items-center hover:bg-slate-800/60 transition-all duration-300 backdrop-blur-md group/forecast hover:-translate-y-1 shadow-lg">
+                  <span className="text-slate-300 font-display text-2xl tracking-tight mt-1 group-hover/forecast:text-white transition-colors">{format(new Date(time), 'EEE')}</span>
+                  <span className="text-sm font-medium text-slate-500 mb-2 group-hover/forecast:text-slate-400 transition-colors">{format(new Date(time), 'MMM d')}</span>
+                  <div className="scale-75 -mt-2 -mb-2 group-hover/forecast:scale-90 transition-transform">
                     {getWeatherIcon(weather.daily.weather_code[index + 1])}
                   </div>
                   <div className="mt-2 flex gap-3 font-display tracking-tight items-baseline">
                     <span className="font-bold text-white text-xl">{Math.round(weather.daily.temperature_2m_max[index + 1])}°</span>
-                    <span className="text-slate-500 text-lg">{Math.round(weather.daily.temperature_2m_min[index + 1])}°</span>
+                    <span className="text-slate-500 text-lg group-hover/forecast:text-slate-400 transition-colors">{Math.round(weather.daily.temperature_2m_min[index + 1])}°</span>
                   </div>
                 </div>
               ))}
