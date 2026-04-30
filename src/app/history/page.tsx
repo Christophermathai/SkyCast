@@ -73,17 +73,17 @@ export default function History() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Search History</h1>
-          <p className="text-slate-400">Manage and export your previous weather lookups.</p>
+          <h1 className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter mb-2">Search History</h1>
+          <p className="text-slate-400 font-serif text-xl" style={{ fontFamily: 'var(--font-instrument-serif), serif' }}>Manage and export your previous weather lookups.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => handleExport('json')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+          <button onClick={() => handleExport('json')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-blue-500/20">
             <Download className="w-4 h-4" /> JSON
           </button>
-          <button onClick={() => handleExport('csv')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+          <button onClick={() => handleExport('csv')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-emerald-500/20">
             <Download className="w-4 h-4" /> CSV
           </button>
-          <button onClick={() => handleExport('md')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+          <button onClick={() => handleExport('md')} className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-purple-500/20">
             <Download className="w-4 h-4" /> MD
           </button>
         </div>
@@ -94,10 +94,10 @@ export default function History() {
           <table className="w-full text-left">
             <thead className="bg-slate-800/50 text-slate-400">
               <tr>
-                <th className="px-6 py-4 font-medium">Location</th>
-                <th className="px-6 py-4 font-medium">Coordinates</th>
-                <th className="px-6 py-4 font-medium">Searched On</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+                <th className="px-6 py-4 font-display text-2xl tracking-tight">Location</th>
+                <th className="px-6 py-4 font-display text-2xl tracking-tight">Coordinates</th>
+                <th className="px-6 py-4 font-display text-2xl tracking-tight">Searched On</th>
+                <th className="px-6 py-4 font-display text-2xl tracking-tight text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
@@ -115,23 +115,23 @@ export default function History() {
                           type="text"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="bg-slate-800 border border-slate-700 rounded px-3 py-1 w-full max-w-[200px] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="bg-slate-800 border border-slate-700 rounded px-3 py-1 w-full max-w-[200px] text-xl font-display focus:outline-none focus:ring-2 focus:ring-blue-500"
                           autoFocus
                         />
-                        <button onClick={() => saveEdit(record.id)} className="text-green-400 hover:text-green-300"><Check className="w-4 h-4" /></button>
-                        <button onClick={() => setEditingId(null)} className="text-red-400 hover:text-red-300"><X className="w-4 h-4" /></button>
+                        <button onClick={() => saveEdit(record.id)} className="text-green-400 hover:text-green-300"><Check className="w-5 h-5" /></button>
+                        <button onClick={() => setEditingId(null)} className="text-red-400 hover:text-red-300"><X className="w-5 h-5" /></button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 font-medium">
-                        <MapPin className="w-4 h-4 text-blue-400" />
+                      <div className="flex items-center gap-2 font-display text-2xl tracking-tight">
+                        <MapPin className="w-5 h-5 text-blue-400" />
                         {record.locationName}
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">
+                  <td className="px-6 py-4 text-slate-400 text-lg font-serif" style={{ fontFamily: 'var(--font-instrument-serif), serif' }}>
                     {record.latitude.toFixed(4)}, {record.longitude.toFixed(4)}
                   </td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">
+                  <td className="px-6 py-4 text-slate-400 text-lg font-serif" style={{ fontFamily: 'var(--font-instrument-serif), serif' }}>
                     {format(new Date(record.createdAt), 'MMM d, yyyy h:mm a')}
                   </td>
                   <td className="px-6 py-4 text-right">

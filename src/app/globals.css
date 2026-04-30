@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-instrument-serif), serif;
+  --font-serif: var(--font-instrument-serif), serif;
+  --font-display: var(--font-thunder), sans-serif;
+}
+
 @layer utilities {
   .animate-in {
     animation-duration: 500ms;
@@ -12,6 +18,11 @@
   .slide-in-from-bottom-4 {
     animation-name: slideInFromBottom;
   }
+  .serif-placeholder::placeholder {
+    font-family: var(--font-instrument-serif), serif !important;
+    font-style: italic;
+    line-height: inherit;
+  }
 }
 
 @keyframes fadeIn {
@@ -22,4 +33,16 @@
 @keyframes slideInFromBottom {
   from { transform: translateY(1rem); }
   to { transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% center; }
+  to { background-position: -200% center; }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 8s linear infinite;
+    background-size: 200% auto;
+  }
 }
