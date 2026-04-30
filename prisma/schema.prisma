@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SearchRecord {
+  id           String   @id @default(uuid())
+  locationName String
+  latitude     Float
+  longitude    Float
+  startDate    DateTime?
+  endDate      DateTime?
+  weatherData  String   // JSON string
+  createdAt    DateTime @default(now())
+}
