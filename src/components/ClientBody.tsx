@@ -6,10 +6,52 @@ import Image from "next/image";
 import { Home, Clock } from "lucide-react";
 import { TemperatureUnitProvider } from "@/context/TemperatureUnitContext";
 import { TemperatureToggle } from "@/components/ui/TemperatureToggle";
+import { useWeather } from "@/context/WeatherContext";
+import { useRef, useEffect, useCallback } from "react";
 
 /**
- * Sidebar extracted and memoized so temperature-unit state changes
- * never cause it to re-render (which was resetting CSS transitions).
+ * Maps WMO weather codes to background videos.
+ * Weather code is the PRIMARY selector. Temperature is only used
+ * as a secondary hint for extreme cold with non-precipitation codes.
+ */
+function getVideoForWeather(code: number | null, temp: number | null): string {
+  if (code === null) return "/Sunny.mp4";
+
+  // --- Precipitation / severe codes ALWAYS take priority ---
+
+  // Thunderstorm (95, 96, 99)
+  if (code >= 95) return "/Thunderstrome.mp4";
+
+  // Heavy snow from weather code (75, 86)
+  if (code === 75 || code === 86) return "/Heavy Snow.mp4";
+
+  // Light/moderate snow from weather code (71-73, 77, 85)
+  if ((code >= 71 && code <= 73) || code === 77 || code === 85) return "/Ligth Snow.mp4";
+
+  // Freezing rain / heavy rain (65-67, 82)
+  if ((code >= 65 && code <= 67) || code === 82) return "/Heavy Rain.mp4";
+
+  // Drizzle / light-moderate rain / showers (51-63, 80-81)
+  if ((code >= 51 && code <= 63) || code === 80 || code === 81) return "/Light Rain.mp4";
+
+  // --- Non-precipitation codes below ---
+  // For these, extreme cold temperature overrides the visual
+  // (e.g. Antarctica: code 3 "overcast" at -30°C → show snow)
+  if (temp !== null && temp <= -15) return "/Heavy Snow.mp4";
+  if (temp !== null && temp <= -5) return "/Ligth Snow.mp4";
+
+  // Fog (45, 48)
+  if (code === 45 || code === 48) return "/Foggy.mp4";
+
+  // Overcast (3) / Partly cloudy (2)
+  if (code === 2 || code === 3) return "/Overcast.mp4";
+
+  // Clear / mainly clear (0, 1)
+  return "/Sunny.mp4";
+}
+
+/**
+ * Sidebar — memoized so temperature-unit toggles never re-render it.
  */
 const Sidebar = memo(function Sidebar() {
   return (
@@ -75,21 +117,98 @@ const Sidebar = memo(function Sidebar() {
   );
 });
 
+/**
+ * Single-video fade-out → swap → fade-in approach.
+ * Only ONE video element is ever decoding at a time → no GPU contention.
+ * Uses imperative DOM manipulation for the opacity transition to avoid
+ * React re-renders triggering layout thrash on the video element.
+ */
 export function ClientBody({ children }: { children: React.ReactNode }) {
+  const { weatherCode, temperature } = useWeather();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const currentSrcRef = useRef("/Sunny.mp4");
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
+
+  // Set initial src once on mount — never via JSX so React can't stomp it
+  useEffect(() => {
+    if (videoRef.current && !mountedRef.current) {
+      mountedRef.current = true;
+      const initialSrc = getVideoForWeather(weatherCode, temperature);
+      videoRef.current.src = initialSrc;
+      currentSrcRef.current = initialSrc;
+    }
+  }, []);
+
+  const swapVideo = useCallback((nextSrc: string) => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (nextSrc === currentSrcRef.current) return;
+
+    // Cancel any in-progress transition so the latest search always wins
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+
+    // Phase 1: Fade out (500ms)
+    video.style.opacity = "0";
+
+    fadeTimerRef.current = setTimeout(() => {
+      fadeTimerRef.current = null;
+
+      // Phase 2: Swap src
+      video.src = nextSrc;
+      currentSrcRef.current = nextSrc;
+
+      const onReady = () => {
+        video.removeEventListener("canplay", onReady);
+        if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+        // Phase 3: Fade in (500ms)
+        video.style.opacity = "0.6";
+      };
+
+      // If the video is already cached / ready
+      if (video.readyState >= 3) {
+        onReady();
+      } else {
+        video.addEventListener("canplay", onReady);
+        // Safety timeout in case canplay never fires
+        safetyTimerRef.current = setTimeout(() => {
+          video.removeEventListener("canplay", onReady);
+          video.style.opacity = "0.6";
+          safetyTimerRef.current = null;
+        }, 4000);
+      }
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) return; // skip on first render (handled by mount effect)
+    const nextSrc = getVideoForWeather(weatherCode, temperature);
+    swapVideo(nextSrc);
+  }, [weatherCode, temperature, swapVideo]);
+
   return (
     <TemperatureUnitProvider>
-      {/* Looping Background Video */}
+      {/* Single Background Video — src managed entirely by refs, never by JSX */}
       <video
+        ref={videoRef}
         autoPlay
         loop
         muted
         playsInline
-        className="fixed inset-0 w-full h-full object-cover z-[-2] opacity-70"
-      >
-        <source src="/background.mp4" type="video/mp4" />
-      </video>
+        className="fixed inset-0 w-full h-full object-cover z-[-2]"
+        style={{
+          opacity: 0.6,
+          transition: "opacity 600ms ease-in-out",
+          pointerEvents: "none",
+          willChange: "opacity",
+        }}
+      />
+
       {/* Global Glass Overlay */}
-      <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-[-1]" />
+      <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-[-1]" />
 
       <Sidebar />
 

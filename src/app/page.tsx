@@ -9,6 +9,7 @@ type WeatherData = any;
 import { SplitText } from "@/components/ui/SplitText";
 import { CountUp } from "@/components/ui/CountUp";
 import { useTemperatureUnit } from "@/context/TemperatureUnitContext";
+import { useWeather } from "@/context/WeatherContext";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -17,6 +18,7 @@ export default function Home() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [locationName, setLocationName] = useState("");
   const { convert, label: unitLabel, unit } = useTemperatureUnit();
+  const { setWeatherData } = useWeather();
 
   const fetchWeather = async (lat: number, lon: number, name: string) => {
     setLoading(true);
@@ -31,6 +33,7 @@ export default function Home() {
 
       setWeather(data);
       setLocationName(name);
+      setWeatherData(data.current.weather_code, data.current.temperature_2m);
 
       // Save to database
       await fetch('/api/weather', {

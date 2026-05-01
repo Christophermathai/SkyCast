@@ -3,6 +3,7 @@ import { Instrument_Serif } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
 import { ClientBody } from '@/components/ClientBody';
+import { WeatherProvider } from '@/context/WeatherContext';
 
 const thunder = localFont({
   src: './fonts/Thunder-VF.ttf',
@@ -18,7 +19,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: 'Full Stack Weather App',
+  title: 'SkyCast | Premium Weather',
   description: 'A beautiful and dynamic weather application.',
 };
 
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${thunder.variable} ${instrumentSerif.variable} text-slate-100 min-h-screen flex overflow-x-hidden relative`}>
-        <ClientBody>{children}</ClientBody>
+        <WeatherProvider>
+          <ClientBody>{children}</ClientBody>
+        </WeatherProvider>
       </body>
     </html>
   );
