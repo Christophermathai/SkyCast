@@ -9,11 +9,7 @@ import { TemperatureToggle } from "@/components/ui/TemperatureToggle";
 import { useWeather } from "@/context/WeatherContext";
 import { useRef, useEffect, useCallback } from "react";
 
-/**
- * Maps WMO weather codes to background videos.
- * Weather code is the PRIMARY selector. Temperature is only used
- * as a secondary hint for extreme cold with non-precipitation codes.
- */
+
 function getVideoForWeather(code: number | null, temp: number | null): string {
   if (code === null) return "/Sunny.mp4";
 
@@ -64,8 +60,7 @@ const Sidebar = memo(function Sidebar() {
             <Image
               src="/Logo.png"
               alt="logo"
-              width={48}
-              height={48}
+              fill
               className="object-contain"
             />
           </div>
